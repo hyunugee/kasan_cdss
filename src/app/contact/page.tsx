@@ -39,8 +39,8 @@ export default function Contact() {
                     <div className="card">
                         <h3 className={styles.infoTitle}>Lab Location</h3>
                         <p className={styles.infoText}>
-                            Samsung Medical Center<br />
-                            81 Irwon-ro, Gangnam-gu<br />
+                            Asan Medical Center<br />
+                            88 Olympic-ro 43-gil, Songpa-gu<br />
                             Seoul, South Korea
                         </p>
                     </div>
@@ -48,8 +48,8 @@ export default function Contact() {
                     <div className="card" style={{ marginTop: '1.5rem' }}>
                         <h3 className={styles.infoTitle}>Email</h3>
                         <p className={styles.infoText}>
-                            contact@kasancdss.org<br />
-                            support@kasancdss.org
+                            hwkwon@amc.seoul.kr<br />
+                            ultrapolymer@hotmail.com
                         </p>
                     </div>
                 </div>
