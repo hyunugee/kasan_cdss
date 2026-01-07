@@ -40,7 +40,7 @@ export default function Contact() {
                         <h3 className={styles.infoTitle}>Lab Location</h3>
                         <p className={styles.infoText}>
                             Asan Medical Center<br />
-                            88 Olympic-ro 43-gil, Songpa-gu<br />
+                            88 Olympicro 43gil, Songpa-gu<br />
                             Seoul, South Korea
                         </p>
                     </div>
