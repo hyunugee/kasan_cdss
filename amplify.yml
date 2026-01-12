@@ -1,0 +1,24 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+        - echo "Installing Python dependencies..."
+        - python3 -m pip install --upgrade pip
+        # Install CPU-only version of PyTorch to reduce slug size and build time
+        - python3 -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        - python3 -m pip install pandas numpy scikit-learn
+        # Install other requirements from the file if needed, but the above are the core for inference
+        # - python3 -m pip install -r tacrolimus-service/requirements.txt
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - ~/.cache/pip

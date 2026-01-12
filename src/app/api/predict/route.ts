@@ -13,10 +13,11 @@ export async function POST(req: NextRequest) {
         // We need to pass the body as a JSON string argument
         const inputJson = JSON.stringify(body);
 
+        // Determine python command based on platform
+        const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+
         return new Promise((resolve) => {
-            // Adjust 'python' to 'python3' or specific path if needed. 
-            // On Windows, 'python' usually works if in PATH.
-            execFile('python', [scriptPath, '--input', inputJson], (error, stdout, stderr) => {
+            execFile(pythonCommand, [scriptPath, '--input', inputJson], (error, stdout, stderr) => {
                 if (error) {
                     console.error('Python execution error:', error);
                     console.error('Stderr:', stderr);
