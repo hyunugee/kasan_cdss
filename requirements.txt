@@ -1,5 +1,7 @@
 streamlit
-torch
-numpy
 pandas
+numpy
+torch
+gspread
+google-auth
 scikit-learn
