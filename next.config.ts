@@ -5,11 +5,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    // Ensure the python service files are included in the standalone build
-    // @ts-ignore
-    outputFileTracingIncludes: {
-      '/api/predict': ['./tacrolimus-service/**/*'],
-    },
+  },
+  // Ensure the python service files are included in the standalone build
+  outputFileTracingIncludes: {
+    '/api/predict': ['./tacrolimus-service/**/*'],
   },
 };
 

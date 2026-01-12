@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         // Determine python command based on platform
         const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
 
-        return new Promise((resolve) => {
+        return new Promise<NextResponse>((resolve) => {
             execFile(pythonCommand, [scriptPath, '--input', inputJson], (error, stdout, stderr) => {
                 if (error) {
                     console.error('Python execution error:', error);

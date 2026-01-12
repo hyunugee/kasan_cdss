@@ -4,11 +4,18 @@ frontend:
     preBuild:
       commands:
         - npm ci
-        - echo "Installing minimal Python dependencies..."
+        - echo "=== DEBUG: Checking Environment ==="
+        - node -v
+        - npm -v
+        - python3 --version
+        - which python3
+        - echo "=== DEBUG: Starting Install ==="
         - python3 -m pip install --upgrade pip --no-cache-dir
-        # Install CPU-only version of PyTorch (lightweight) without cache to save space
+        # Check standard libraries first (fast)
+        - python3 -m pip install numpy pandas scikit-learn --no-cache-dir
+        # Install Torch CPU last (slowest)
         - python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
-        - python3 -m pip install pandas numpy scikit-learn --no-cache-dir
+        - echo "=== DEBUG: PreBuild Complete ==="
     build:
       commands:
         - npm run build
