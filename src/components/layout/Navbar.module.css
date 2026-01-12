@@ -1,0 +1,46 @@
+.navbar {
+    background-color: var(--background);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 1rem 0;
+}
+
+.nabaWrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logoLink {
+    display: flex;
+    align-items: center;
+}
+
+.logoImage {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.menu {
+    display: flex;
+    gap: 2rem;
+}
+
+.navItem {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.navItem:hover {
+    color: var(--color-orange-primary);
+}
+
+.active {
+    color: var(--color-orange-primary);
+    font-weight: 600;
+}

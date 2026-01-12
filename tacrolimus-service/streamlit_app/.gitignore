@@ -1,0 +1,22 @@
+# Excel data files
+*.xlsx
+tdm_data.xlsx
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit
+.streamlit/
+
+# Model files (if large)
+# *.pkl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+

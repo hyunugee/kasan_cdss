@@ -1,0 +1,101 @@
+.container {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  padding: 2rem;
+}
+
+.heroContent {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  /* Increased gap */
+}
+
+.mainTitle {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem 2.5rem;
+  /* Increased spacing between words */
+  font-size: 4rem;
+  /* Significantly increased font size */
+  font-weight: 300;
+  color: #555;
+  max-width: 1300px;
+  line-height: 1.1;
+}
+
+.wordLine {
+  display: inline-block;
+}
+
+/* Gradient Colors for K A S A N */
+
+.charK {
+  font-weight: 800;
+  color: #FF6B00;
+  /* Step 1: Orange */
+}
+
+.charA1 {
+  font-weight: 800;
+  color: #FF9E00;
+  /* Step 2: Lighter Orange */
+}
+
+.charS {
+  font-weight: 800;
+  color: #C0CA33;
+  /* Step 3: Lime/Yellow Mix */
+}
+
+.charA2 {
+  font-weight: 800;
+  color: #4CAF50;
+  /* Step 4: Medium Green */
+}
+
+.charN {
+  font-weight: 800;
+  color: #00C853;
+  /* Step 5: Primary Green */
+}
+
+.subTitle {
+  font-size: 6rem;
+  /* Huge impact for AI Lab */
+  font-weight: 900;
+  background: linear-gradient(90deg, #333, #666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 1rem;
+  letter-spacing: -0.05em;
+}
+
+@media (max-width: 1024px) {
+  .mainTitle {
+    font-size: 3rem;
+    gap: 1rem 2rem;
+  }
+
+  .subTitle {
+    font-size: 4.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainTitle {
+    font-size: 2rem;
+    gap: 0.5rem 1rem;
+  }
+
+  .subTitle {
+    font-size: 3rem;
+  }
+}

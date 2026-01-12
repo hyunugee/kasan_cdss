@@ -1,0 +1,55 @@
+# Python 캐시
+__pycache__/
+*.pyc
+
+# Python 가상 환경
+venv/
+env/
+*/venv/
+*/env/
+.venv/
+
+# Python 빌드/배포
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 데이터 (대용량 파일)
+data/
+
+# 실험 관련 출력물
+catboost_info/
+visualizations/
+visualizations_external/
+visualizations_internal/
+experiment_results_internal/
+experiment_results_external/
+# checkpoints/  # Streamlit Cloud 배포를 위해 주석 처리 (모델 파일 필요)
+experiment_results/
+_deprecated/
+source_code/
+archive/
+logs/
+*.log
+
+# Streamlit 앱 관련
+streamlit_app/tdm_data.xlsx
+streamlit_app/service_account.json
+streamlit_app/.streamlit/secrets.toml
+
+# OS 자동 생성 파일
+.DS_Store
+Thumbs.db
+
+# IDE 설정
+.vscode/
+.idea/
+
+# 비밀/환경 설정 파일 
+*.env
+.env
+.env.*
+!*.env.example
