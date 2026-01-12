@@ -8,10 +8,10 @@ frontend:
         - "python3 --version"
         - "echo '=== DEBUG: Starting Install ==='"
         - "python3 -m pip install --upgrade pip --no-cache-dir"
-        # Install libraries LOCALLY into tacrolimus-service/libs so they are bundled
-        - "mkdir -p tacrolimus-service/libs"
-        - "python3 -m pip install numpy pandas scikit-learn -t tacrolimus-service/libs --no-cache-dir"
-        - "python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu -t tacrolimus-service/libs --no-cache-dir"
+        - "echo '=== DEBUG: Installing Build Dependencies ==='"
+        - "python3 -m pip install torch onnx onnxruntime --index-url https://download.pytorch.org/whl/cpu --no-cache-dir"
+        - "echo '=== DEBUG: Running Model Conversion ==='"
+        - "python3 tacrolimus-service/convert_to_onnx.py"
         - "echo '=== DEBUG: PreBuild Complete ==='"
     build:
       commands:

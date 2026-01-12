@@ -6,9 +6,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Ensure the python service files (including vendored libs) are included in the standalone build
+  // Ensure the converted ONNX model and necessary assets are included
   outputFileTracingIncludes: {
-    '/api/predict': ['./tacrolimus-service/**/*', './tacrolimus-service/libs/**/*'],
+    '/api/predict': [
+      './tacrolimus-service/**/*.onnx',
+      './src/app/analytics/page.module.css'
+    ],
   },
 };
 
