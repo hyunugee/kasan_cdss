@@ -3,22 +3,18 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
-        - echo "=== DEBUG: Checking Environment ==="
-        - node -v
-        - npm -v
-        - python3 --version
-        - which python3
-        - echo "=== DEBUG: Starting Install ==="
-        - python3 -m pip install --upgrade pip --no-cache-dir
-        # Check standard libraries first (fast)
-        - python3 -m pip install numpy pandas scikit-learn --no-cache-dir
-        # Install Torch CPU last (slowest)
-        - python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
-        - echo "=== DEBUG: PreBuild Complete ==="
+        - "npm ci"
+        - "echo '=== DEBUG: Checking Environment ==='"
+        - "python3 --version"
+        - "echo '=== DEBUG: Starting Install ==='"
+        - "python3 -m pip install --upgrade pip --no-cache-dir"
+        - "python3 -m pip install numpy pandas scikit-learn --no-cache-dir"
+        # The following line caused the error because of the colon in https://
+        - "python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir"
+        - "echo '=== DEBUG: PreBuild Complete ==='"
     build:
       commands:
-        - npm run build
+        - "npm run build"
   artifacts:
     baseDirectory: .next
     files:
