@@ -12,6 +12,12 @@ from timeseries_models import RNNModel
 # Setup paths
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 CHECKPOINT_DIR = os.path.join(CURRENT_DIR, 'checkpoints')
+
+# Add local libs to path (for AWS Lambda/Amplify)
+LIBS_DIR = os.path.join(CURRENT_DIR, 'libs')
+if os.path.exists(LIBS_DIR):
+    sys.path.insert(0, LIBS_DIR)
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def parse_model_filename(filename):

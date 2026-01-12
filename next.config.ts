@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
-  // Ensure the python service files are included in the standalone build
+  // Ensure the python service files (including vendored libs) are included in the standalone build
   outputFileTracingIncludes: {
-    '/api/predict': ['./tacrolimus-service/**/*'],
+    '/api/predict': ['./tacrolimus-service/**/*', './tacrolimus-service/libs/**/*'],
   },
 };
 

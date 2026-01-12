@@ -16,13 +16,19 @@ export async function POST(req: NextRequest) {
         // Determine python command based on platform
         const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
 
+        console.log(`[API] Script Path: ${scriptPath}`);
+        console.log(`[API] Run Command: ${pythonCommand}`);
+
         return new Promise<NextResponse>((resolve) => {
-            execFile(pythonCommand, [scriptPath, '--input', inputJson], (error, stdout, stderr) => {
+            execFile(pythonCommand, [scriptPath, '--input', inputJson], { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+                if (stderr) {
+                    console.error('[API] Python stderr:', stderr);
+                }
+
                 if (error) {
-                    console.error('Python execution error:', error);
-                    console.error('Stderr:', stderr);
+                    console.error('[API] Python exec error:', error);
                     resolve(NextResponse.json(
-                        { error: 'Failed to execute prediction model', details: stderr },
+                        { error: 'Failed to execute prediction model', details: stderr || error.message },
                         { status: 500 }
                     ));
                     return;
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
                 try {
                     const result = JSON.parse(stdout);
                     if (result.status === 'error') {
+                        console.error('[API] Model reported error:', result.error);
                         resolve(NextResponse.json(
                             { error: result.error },
                             { status: 400 }
@@ -40,6 +47,7 @@ export async function POST(req: NextRequest) {
                     }
                 } catch (parseError) {
                     console.error('JSON parse error:', parseError);
+                    console.error('Raw stdout:', stdout);
                     resolve(NextResponse.json(
                         { error: 'Invalid response from model', details: stdout },
                         { status: 500 }
