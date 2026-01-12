@@ -18,7 +18,23 @@ export default function Navbar() {
 
                     <div className={styles.menu}>
                         {NAV_ITEMS.map((item) => {
+                            const isExternal = item.href.startsWith('http');
                             const isActive = pathname === item.href;
+
+                            if (isExternal) {
+                                return (
+                                    <a
+                                        key={item.href}
+                                        href={item.href}
+                                        className={styles.navItem}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {item.label}
+                                    </a>
+                                );
+                            }
+
                             return (
                                 <Link
                                     key={item.href}
