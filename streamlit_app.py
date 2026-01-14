@@ -63,7 +63,17 @@ def get_gspread_client():
         try:
             if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
                 credentials_dict = dict(st.secrets["gcp_service_account"])
-                credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+                raw_key = credentials_dict["private_key"]
+                header = "-----BEGIN PRIVATE KEY-----"
+                footer = "-----END PRIVATE KEY-----"
+            
+                # 본문만 쏙 뽑아서 모든 불순물(\n, \r, 공백, 역슬래시)을 제거합니다.
+                content = raw_key.replace(header, "").replace(footer, "")
+                content = content.replace("\\n", "").replace("\n", "").replace("\r", "").replace(" ", "").strip()
+            
+                # 구글이 원하는 완벽한 PEM 형식으로 재조립합니다.
+                clean_key = f"{header}\n{content}\n{footer}\n"
+                credentials_dict["private_key"] = clean_key
                 credentials = Credentials.from_service_account_info(
                     credentials_dict,
                     scopes=SCOPES
