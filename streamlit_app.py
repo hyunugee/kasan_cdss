@@ -11,7 +11,41 @@ import base64
 import gspread
 from google.oauth2.service_account import Credentials
 import json
+import re
 
+@st.cache_resource
+def get_gspread_client():
+    try:
+        if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
+            credentials_dict = dict(st.secrets["gcp_service_account"])
+            raw_key = credentials_dict["private_key"]
+            
+            # 1. 헤더와 푸터 정의
+            header = "-----BEGIN PRIVATE KEY-----"
+            footer = "-----END PRIVATE KEY-----"
+            
+            # 2. 본문만 추출
+            content = raw_key.replace(header, "").replace(footer, "")
+            
+            # 3. [강력한 필터] 영문, 숫자, +, /, = 이외의 모든 문자(엔터, 공백, 역슬래시 등)를 강제 제거
+            # 이 코드가 적용되면 1625라는 숫자가 1624(4의 배수)로 자동 교정됩니다.
+            content = re.sub(r'[^a-zA-Z0-9+/=]', '', content)
+            
+            # 4. 깨끗한 본문으로 재조립
+            clean_key = f"{header}\n{content}\n{footer}\n"
+            credentials_dict["private_key"] = clean_key
+            
+            credentials = Credentials.from_service_account_info(
+                credentials_dict,
+                scopes=SCOPES
+            )
+            client = gspread.authorize(credentials)
+            return client
+        else:
+            raise KeyError("Secrets not found")
+    except Exception as e:
+        st.error(f"Google Sheets 연결 오류: {str(e)}")
+        return None
 # 1. 경로 설정 (안티그래버티 보정 버전)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVICE_DIR = os.path.join(CURRENT_DIR, 'tacrolimus-service')
