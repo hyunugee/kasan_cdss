@@ -16,6 +16,8 @@ import json
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVICE_DIR = os.path.join(CURRENT_DIR, 'tacrolimus-service')
 
+sys.path.append(os.path.join(CURRENT_DIR, 'tacrolimus-service'))
+
 # 시스템 경로에 추가하여 어디서든 파일을 찾을 수 있게 함
 if SERVICE_DIR not in sys.path:
     sys.path.append(SERVICE_DIR)
