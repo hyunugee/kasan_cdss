@@ -63,6 +63,7 @@ def get_gspread_client():
         try:
             if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
                 credentials_dict = dict(st.secrets["gcp_service_account"])
+                credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
                 credentials = Credentials.from_service_account_info(
                     credentials_dict,
                     scopes=SCOPES
