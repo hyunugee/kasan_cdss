@@ -91,7 +91,7 @@ def get_gspread_client():
         return client
     except Exception as e:
         # Google Sheets 오류는 치명적이지 않게 처리 (데이터 저장만 안됨)
-        # st.error(f"Google Sheets 연결 오류: {str(e)}")
+        st.error(f"Google Sheets 연결 오류: {str(e)}")
         return None
 
 def get_or_create_spreadsheet():
