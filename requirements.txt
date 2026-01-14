@@ -5,3 +5,4 @@ torch
 gspread
 google-auth
 scikit-learn
+tqdm
