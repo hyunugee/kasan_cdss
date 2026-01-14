@@ -12,20 +12,22 @@ import gspread
 from google.oauth2.service_account import Credentials
 import json
 
-# 상위 디렉토리의 모듈 import (tacrolimus-service 폯더를 참조하도록 수정)
-# root/streamlit_app.py 위치에서 tacrolimus-service/timeseries_models.py를 찾아야 함
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tacrolimus-service'))
+# 1. 경로 설정 (안티그래버티 보정 버전)
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVICE_DIR = os.path.join(CURRENT_DIR, 'tacrolimus-service')
+
+# 시스템 경로에 추가하여 어디서든 파일을 찾을 수 있게 함
+if SERVICE_DIR not in sys.path:
+    sys.path.append(SERVICE_DIR)
 
 try:
+    # 이제 'tacrolimus-service' 폴더 안의 엔진을 불러옵니다.
     from timeseries_models import RNNModel
 except ImportError:
-    # 혹시 경로가 안 맞을 경우를 대비해 시도
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tacrolimus-service/streamlit_app'))
-    try:
-        from timeseries_models import RNNModel
-    except ImportError:
-        # tacrolimus-service가 아닌 현재 디렉토리 등에서 찾도록
-        pass
+    st.error("⚠️ 'timeseries_models.py' 파일을 찾을 수 없습니다. 폴더 위치를 확인해주세요.")
+
+# 모델 가중치(.pth)가 들어있는 폴더 위치 설정
+CHECKPOINT_DIR = os.path.join(SERVICE_DIR, 'checkpoints')
 
 # 페이지 설정
 st.set_page_config(
