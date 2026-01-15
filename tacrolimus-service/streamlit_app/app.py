@@ -21,7 +21,7 @@ st.set_page_config(
     page_title="신장이식 환자 FK 레벨 추적기",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # Google Sheets 설정
@@ -734,17 +734,10 @@ def main():
                 with col1:
                     st.write("**전날 오후 FK용량**")
                     prev_pm_key = f"prev_pm_{day}"
-                    # table_data에서 값 가져오기 (예측 결과 반영)
-                    prev_pm_from_table = day_data.get('전날 오후 FK용량')
-                    
-                    # table_data 값으로 무조건 세션 상태 업데이트
-                    if prev_pm_from_table is not None:
-                        # table_data에 값이 있으면 무조건 덮어쓰기 (예측 결과 반영)
-                        st.session_state[prev_pm_key] = float(prev_pm_from_table)
-                    else:
-                        # table_data에 값이 없으면 세션 상태 확인하고 없으면 0.0
-                        if prev_pm_key not in st.session_state:
-                            st.session_state[prev_pm_key] = 0.0
+                    # 세션 상태 우선, 없으면 table_data에서 가져오기
+                    if prev_pm_key not in st.session_state:
+                        prev_pm_default = day_data.get('전날 오후 FK용량')
+                        st.session_state[prev_pm_key] = float(prev_pm_default) if prev_pm_default is not None else 0.0
                     
                     prev_pm_value = st.number_input(
                         "Previous PM dose (mg)",
@@ -753,25 +746,14 @@ def main():
                         key=prev_pm_key,
                         format="%.2f"
                     )
-                    
-                    # 사용자가 값을 변경하면 table_data도 업데이트
-                    if prev_pm_value != day_data.get('전날 오후 FK용량'):
-                        st.session_state.table_data[day]['전날 오후 FK용량'] = prev_pm_value
                 
                 with col2:
                     st.write("**당일 오전 FK용량**")
                     am_key = f"am_{day}"
-                    # table_data에서 값 가져오기 (예측 결과 반영)
-                    am_from_table = day_data.get('당일 오전 FK용량')
-                    
-                    # table_data 값으로 무조건 세션 상태 업데이트
-                    if am_from_table is not None:
-                        # table_data에 값이 있으면 무조건 덮어쓰기 (예측 결과 반영)
-                        st.session_state[am_key] = float(am_from_table)
-                    else:
-                        # table_data에 값이 없으면 세션 상태 확인하고 없으면 0.0
-                        if am_key not in st.session_state:
-                            st.session_state[am_key] = 0.0
+                    # 세션 상태 우선, 없으면 table_data에서 가져오기
+                    if am_key not in st.session_state:
+                        am_default = float(day_data.get('당일 오전 FK용량', 0)) if day_data.get('당일 오전 FK용량') is not None else 0.0
+                        st.session_state[am_key] = am_default
                     
                     am_value = st.number_input(
                         "Today AM dose (mg)",
@@ -780,10 +762,6 @@ def main():
                         key=am_key,
                         format="%.2f"
                     )
-                    
-                    # 사용자가 값을 변경하면 table_data도 업데이트
-                    if am_value != day_data.get('당일 오전 FK용량'):
-                        st.session_state.table_data[day]['당일 오전 FK용량'] = am_value
                 
                 with col3:
                     st.write("**FK TDM**")
