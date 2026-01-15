@@ -891,11 +891,38 @@ def main():
                             # 3. 결과 저장
                             st.session_state.table_data[day]['당일 오후 FK용량'] = pm_pred
                             st.session_state[f"predicted_pm_{day}"] = pm_pred
+                            
+                            # 다음날 값 채우기
                             if day < 8:
                                 st.session_state[f"predicted_am_{day+1}"] = am_pred
+                                st.session_state.table_data[day+1]['당일 오전 FK용량'] = am_pred
+                                st.session_state.table_data[day+1]['전날 오후 FK용량'] = pm_pred
+                                # 입력 칸의 세션 상태도 업데이트
+                                st.session_state[f"prev_pm_{day+1}"] = pm_pred
+                                st.session_state[f"am_{day+1}"] = am_pred
                             
-                            st.success("Done!")
+                            st.success("✅ Prediction completed!")
                             st.rerun()
+        
+        # 전체 데이터 요약 테이블
+        st.markdown("---")
+        st.subheader("📊 Summary table")
+        
+        summary_data = []
+        for day in days:
+            day_data = st.session_state.table_data.get(day, {})
+            # 전날 오후 FK용량 가져오기
+            prev_pm_dose = day_data.get('전날 오후 FK용량', '')
+            
+            summary_data.append({
+                'Day': f"Day {day}",
+                '전날 오후 FK용량 (Previous PM FK dose)': prev_pm_dose if prev_pm_dose is not None else '',
+                '당일 오전 FK용량 (Today AM FK dose)': day_data.get('당일 오전 FK용량', ''),
+                'FK TDM (FK trough level)': day_data.get('FK TDM', '')
+            })
+        
+        summary_df = pd.DataFrame(summary_data)
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
 
 if __name__ == "__main__":
     main()
