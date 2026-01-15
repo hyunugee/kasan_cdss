@@ -737,17 +737,16 @@ def main():
                     # table_data에서 값 가져오기
                     prev_pm_from_table = day_data.get('전날 오후 FK용량')
                     
-                    # 기본값 설정: table_data에 값이 있으면 사용, 없으면 0.0
+                    # 세션 상태 초기화 또는 업데이트 (table_data 우선)
                     if prev_pm_from_table is not None:
-                        prev_pm_default = float(prev_pm_from_table)
-                    else:
-                        prev_pm_default = 0.0
+                        st.session_state[prev_pm_key] = float(prev_pm_from_table)
+                    elif prev_pm_key not in st.session_state:
+                        st.session_state[prev_pm_key] = 0.0
                     
                     prev_pm_value = st.number_input(
                         "Previous PM dose (mg)",
                         min_value=0.0,
                         step=0.05,
-                        value=prev_pm_default,
                         key=prev_pm_key,
                         format="%.2f"
                     )
@@ -758,17 +757,16 @@ def main():
                     # table_data에서 값 가져오기
                     am_from_table = day_data.get('당일 오전 FK용량')
                     
-                    # 기본값 설정: table_data에 값이 있으면 사용, 없으면 0.0
+                    # 세션 상태 초기화 또는 업데이트 (table_data 우선)
                     if am_from_table is not None:
-                        am_default = float(am_from_table)
-                    else:
-                        am_default = 0.0
+                        st.session_state[am_key] = float(am_from_table)
+                    elif am_key not in st.session_state:
+                        st.session_state[am_key] = 0.0
                     
                     am_value = st.number_input(
                         "Today AM dose (mg)",
                         min_value=0.0,
                         step=0.05,
-                        value=am_default,
                         key=am_key,
                         format="%.2f"
                     )
