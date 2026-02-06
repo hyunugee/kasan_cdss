@@ -3,19 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - "npm ci"
-        - "echo '=== DEBUG: Checking Environment ==='"
-        - "python3 --version"
-        - "echo '=== DEBUG: Starting Install ==='"
-        - "python3 -m pip install --upgrade pip --no-cache-dir"
-        - "echo '=== DEBUG: Installing Build Dependencies ==='"
-        - "python3 -m pip install torch onnx onnxruntime --index-url https://download.pytorch.org/whl/cpu --no-cache-dir"
-        - "echo '=== DEBUG: Running Model Conversion ==='"
-        - "python3 tacrolimus-service/convert_to_onnx.py"
-        - "echo '=== DEBUG: PreBuild Complete ==='"
+        - npm ci
     build:
       commands:
-        - "npm run build"
+        - npm run build
   artifacts:
     baseDirectory: .next
     files:
