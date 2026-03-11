@@ -534,6 +534,11 @@ def predict_dose(patient_id, day_index, previous_evening_dose, current_morning_d
         # 1일차 PM 감산
         if day_index == 1:
             pm_prediction -= 0.5
+            
+        # 3일차 가중치 추가 (0.5mg씩)
+        if day_index == 3:
+            pm_prediction += 0.5
+            am_prediction += 0.5
         
         # Google Sheets에 데이터 저장
         save_success = save_data_to_sheets(
