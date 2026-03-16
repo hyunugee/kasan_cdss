@@ -109,12 +109,12 @@ def get_or_create_worksheet(patient_id):
             worksheet = spreadsheet.add_worksheet(title=patient_id, rows=100, cols=10)
             
             # 헤더 설정
-            headers = ['Day', '전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM']
-            worksheet.update('A1:D1', [headers])
-            
+            headers = ['Day', '전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM', '당일 오후 FK용량']
+            worksheet.update('A1:E1', [headers])
+
             # Day 1-8 초기화
-            days_data = [[i, None, None, None] for i in range(1, 9)]
-            worksheet.update('A2:D9', days_data)
+            days_data = [[i, None, None, None, None] for i in range(1, 9)]
+            worksheet.update('A2:E9', days_data)
         
         return worksheet
     except Exception as e:
@@ -143,10 +143,11 @@ def load_patient_data_from_sheets(patient_id):
         df['Day'] = pd.to_numeric(df['Day'], errors='coerce')
         
         # 빈 문자열을 None으로 변환
-        for col in ['전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM']:
-            df[col] = df[col].replace('', None)
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-        
+        for col in ['전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM', '당일 오후 FK용량']:
+            if col in df.columns:
+                df[col] = df[col].replace('', None)
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+
         # table_data 형식으로 변환
         table_data = {}
         for idx, row in df.iterrows():
@@ -156,7 +157,7 @@ def load_patient_data_from_sheets(patient_id):
                     '전날 오후 FK용량': row['전날 오후 FK용량'] if not pd.isna(row['전날 오후 FK용량']) else None,
                     '당일 오전 FK용량': row['당일 오전 FK용량'] if not pd.isna(row['당일 오전 FK용량']) else None,
                     'FK TDM': row['FK TDM'] if not pd.isna(row['FK TDM']) else None,
-                    '당일 오후 FK용량': None  # 예측 결과는 세션에만 저장
+                    '당일 오후 FK용량': row['당일 오후 FK용량'] if '당일 오후 FK용량' in df.columns and not pd.isna(row['당일 오후 FK용량']) else None
                 }
         
         return table_data
@@ -178,7 +179,11 @@ def save_data_to_sheets(patient_id, day_index, prev_pm_dose, am_dose, fk_tdm, pm
         worksheet.update(f'B{row_num}', [[prev_pm_dose if prev_pm_dose else '']])
         worksheet.update(f'C{row_num}', [[am_dose if am_dose else '']])
         worksheet.update(f'D{row_num}', [[fk_tdm if fk_tdm else '']])
-        
+
+        # 당일 오후 FK용량 (PM 예측값) 저장
+        if pm_prediction is not None:
+            worksheet.update(f'E{row_num}', [[pm_prediction]])
+
         # 다음날 예측값 저장 (day_index < 8인 경우)
         if pm_prediction is not None and am_prediction is not None and day_index < 8:
             next_row_num = day_index + 2
@@ -197,9 +202,9 @@ def clear_patient_data_in_sheets(patient_id):
         if not worksheet:
             return False
         
-        # Day 2-9행의 B, C, D 컬럼 초기화 (헤더 제외)
-        clear_data = [['', '', ''] for _ in range(8)]
-        worksheet.update('B2:D9', clear_data)
+        # Day 2-9행의 B, C, D, E 컬럼 초기화 (헤더 제외)
+        clear_data = [['', '', '', ''] for _ in range(8)]
+        worksheet.update('B2:E9', clear_data)
         
         return True
     except Exception as e:
@@ -814,7 +819,19 @@ def main():
                                 "Please enter previous PM dose, today AM dose, and FK TDM."
                             )
                             st.stop()
-                        
+
+                        # 이전 Day 예측 완료 여부 검증
+                        if day > 1:
+                            missing_days = []
+                            for prev_day in range(1, day):
+                                prev_data = st.session_state.table_data.get(prev_day, {})
+                                if prev_data.get('당일 오후 FK용량') is None:
+                                    missing_days.append(prev_day)
+                            if missing_days:
+                                missing_str = ", ".join([f"Day {d}" for d in missing_days])
+                                st.error(f"Please complete prediction for {missing_str} first.")
+                                st.stop()
+
                         # 입력값 저장 (예측 전에 현재 입력값 저장)
                         st.session_state.table_data[day]['전날 오후 FK용량'] = previous_evening_dose
                         st.session_state.table_data[day]['당일 오전 FK용량'] = current_morning_dose
