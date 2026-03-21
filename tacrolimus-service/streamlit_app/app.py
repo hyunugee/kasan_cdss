@@ -453,12 +453,27 @@ def predict_dose(patient_id, day_index, previous_evening_dose, current_morning_d
         am_prediction = round_prediction(am_prediction)
         # am_prediction은 다음날 오전 FK용량 (next_dose_am)
         
+        # TDM 기반 방향성 강제
+        # TDM < 7: 전날 대비 최소 0.5mg 증량
+        # TDM 7~7.5: 감량 금지 (유지 이상)
+        # TDM 7.5~9: 모델 예측 그대로 (제약 없음)
+        # TDM >= 9: 전날 대비 최소 0.5mg 감량
+        if current_fk_tdm < 7:
+            pm_prediction = max(pm_prediction, previous_evening_dose + 0.5)
+            am_prediction = max(am_prediction, current_morning_dose + 0.5)
+        elif current_fk_tdm < 7.5:
+            pm_prediction = max(pm_prediction, previous_evening_dose)
+            am_prediction = max(am_prediction, current_morning_dose)
+        elif current_fk_tdm >= 9:
+            pm_prediction = min(pm_prediction, previous_evening_dose - 0.5)
+            am_prediction = min(am_prediction, current_morning_dose - 0.5)
+
         # 저용량 보정 (0~4일차)
         if day_index <= 4:
             if previous_evening_dose <= 1 or current_morning_dose <= 1:
                 pm_prediction += 0.5
                 am_prediction += 0.5
-        
+
         # 1일차 PM 감산
         if day_index == 1:
             pm_prediction -= 0.5

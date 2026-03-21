@@ -11,42 +11,8 @@ import base64
 import gspread
 from google.oauth2.service_account import Credentials
 import json
-import re
 
-@st.cache_resource
-def get_gspread_client():
-    try:
-        if hasattr(st, 'secrets') and "gcp_service_account" in st.secrets:
-            credentials_dict = dict(st.secrets["gcp_service_account"])
-            raw_key = credentials_dict["private_key"]
-            
-            # 1. 헤더와 푸터 정의
-            header = "-----BEGIN PRIVATE KEY-----"
-            footer = "-----END PRIVATE KEY-----"
-            
-            # 2. 본문만 추출
-            content = raw_key.replace(header, "").replace(footer, "")
-            
-            # 3. [강력한 필터] 영문, 숫자, +, /, = 이외의 모든 문자(엔터, 공백, 역슬래시 등)를 강제 제거
-            # 이 코드가 적용되면 1625라는 숫자가 1624(4의 배수)로 자동 교정됩니다.
-            content = re.sub(r'[^a-zA-Z0-9+/=]', '', content)
-            
-            # 4. 깨끗한 본문으로 재조립
-            clean_key = f"{header}\n{content}\n{footer}\n"
-            credentials_dict["private_key"] = clean_key
-            
-            credentials = Credentials.from_service_account_info(
-                credentials_dict,
-                scopes=SCOPES
-            )
-            client = gspread.authorize(credentials)
-            return client
-        else:
-            raise KeyError("Secrets not found")
-    except Exception as e:
-        st.error(f"Google Sheets 연결 오류: {str(e)}")
-        return None
-# 1. 경로 설정 (안티그래버티 보정 버전)
+# 경로 설정
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVICE_DIR = os.path.join(CURRENT_DIR, 'tacrolimus-service')
 
@@ -79,12 +45,6 @@ SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive'
 ]
-
-# 모델 경로 설정 (Streamlit Cloud와 로컬 모두 지원)
-# 현재 파일의 위치를 기준으로 프로젝트 루트 찾기
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# tacrolimus-service 내의 checkpoints 폴더 참조
-CHECKPOINT_DIR = os.path.join(CURRENT_DIR, 'tacrolimus-service', 'checkpoints')
 
 # 디바이스 설정
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -174,12 +134,12 @@ def get_or_create_worksheet(patient_id):
             worksheet = spreadsheet.add_worksheet(title=patient_id, rows=100, cols=10)
             
             # 헤더 설정
-            headers = ['Day', '전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM']
-            worksheet.update('A1:D1', [headers])
-            
+            headers = ['Day', '전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM', '당일 오후 FK용량']
+            worksheet.update('A1:E1', [headers])
+
             # Day 1-8 초기화
-            days_data = [[i, None, None, None] for i in range(1, 9)]
-            worksheet.update('A2:D9', days_data)
+            days_data = [[i, None, None, None, None] for i in range(1, 9)]
+            worksheet.update('A2:E9', days_data)
         
         return worksheet
     except Exception as e:
@@ -208,10 +168,11 @@ def load_patient_data_from_sheets(patient_id):
         df['Day'] = pd.to_numeric(df['Day'], errors='coerce')
         
         # 빈 문자열을 None으로 변환
-        for col in ['전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM']:
-            df[col] = df[col].replace('', None)
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-        
+        for col in ['전날 오후 FK용량', '당일 오전 FK용량', 'FK TDM', '당일 오후 FK용량']:
+            if col in df.columns:
+                df[col] = df[col].replace('', None)
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+
         # table_data 형식으로 변환
         table_data = {}
         for idx, row in df.iterrows():
@@ -221,7 +182,7 @@ def load_patient_data_from_sheets(patient_id):
                     '전날 오후 FK용량': row['전날 오후 FK용량'] if not pd.isna(row['전날 오후 FK용량']) else None,
                     '당일 오전 FK용량': row['당일 오전 FK용량'] if not pd.isna(row['당일 오전 FK용량']) else None,
                     'FK TDM': row['FK TDM'] if not pd.isna(row['FK TDM']) else None,
-                    '당일 오후 FK용량': None  # 예측 결과는 세션에만 저장
+                    '당일 오후 FK용량': row['당일 오후 FK용량'] if '당일 오후 FK용량' in df.columns and not pd.isna(row['당일 오후 FK용량']) else None
                 }
         
         return table_data
@@ -243,7 +204,11 @@ def save_data_to_sheets(patient_id, day_index, prev_pm_dose, am_dose, fk_tdm, pm
         worksheet.update(f'B{row_num}', [[prev_pm_dose if prev_pm_dose else '']])
         worksheet.update(f'C{row_num}', [[am_dose if am_dose else '']])
         worksheet.update(f'D{row_num}', [[fk_tdm if fk_tdm else '']])
-        
+
+        # 당일 오후 FK용량 (PM 예측값) 저장
+        if pm_prediction is not None:
+            worksheet.update(f'E{row_num}', [[pm_prediction]])
+
         # 다음날 예측값 저장 (day_index < 8인 경우)
         if pm_prediction is not None and am_prediction is not None and day_index < 8:
             next_row_num = day_index + 2
@@ -262,9 +227,9 @@ def clear_patient_data_in_sheets(patient_id):
         if not worksheet:
             return False
         
-        # Day 2-9행의 B, C, D 컬럼 초기화 (헤더 제외)
-        clear_data = [['', '', ''] for _ in range(8)]
-        worksheet.update('B2:D9', clear_data)
+        # Day 2-9행의 B, C, D, E 컬럼 초기화 (헤더 제외)
+        clear_data = [['', '', '', ''] for _ in range(8)]
+        worksheet.update('B2:E9', clear_data)
         
         return True
     except Exception as e:
@@ -525,16 +490,31 @@ def predict_dose(patient_id, day_index, previous_evening_dose, current_morning_d
         am_prediction = round_prediction(am_prediction)
         # am_prediction은 다음날 오전 FK용량 (next_dose_am)
         
+        # TDM 기반 방향성 강제
+        # TDM < 7: 전날 대비 최소 0.5mg 증량
+        # TDM 7~7.5: 감량 금지 (유지 이상)
+        # TDM 7.5~9: 모델 예측 그대로 (제약 없음)
+        # TDM >= 9: 전날 대비 최소 0.5mg 감량
+        if current_fk_tdm < 7:
+            pm_prediction = max(pm_prediction, previous_evening_dose + 0.5)
+            am_prediction = max(am_prediction, current_morning_dose + 0.5)
+        elif current_fk_tdm < 7.5:
+            pm_prediction = max(pm_prediction, previous_evening_dose)
+            am_prediction = max(am_prediction, current_morning_dose)
+        elif current_fk_tdm >= 9:
+            pm_prediction = min(pm_prediction, previous_evening_dose - 0.5)
+            am_prediction = min(am_prediction, current_morning_dose - 0.5)
+
         # 저용량 보정 (0~4일차)
         if day_index <= 4:
             if previous_evening_dose <= 1 or current_morning_dose <= 1:
                 pm_prediction += 0.5
                 am_prediction += 0.5
-        
+
         # 1일차 PM 감산
         if day_index == 1:
             pm_prediction -= 0.5
-            
+
         # 3일차 가중치 추가 (0.5mg씩)
         if day_index == 3:
             pm_prediction += 0.5
@@ -873,11 +853,30 @@ def main():
                     st.write("**Run prediction**")
                     # 예측 수행 버튼
                     if st.button("Predict", key=f"btn_predict_{day}", use_container_width=True):
+                        # 입력값 검증 (전날 오후 용량, 당일 오전 용량, FK TDM 모두 필수)
+                        if prev_pm_value == 0 or am_value == 0 or tdm_value == 0:
+                            st.error(
+                                "Please enter previous PM dose, today AM dose, and FK TDM."
+                            )
+                            st.stop()
+
+                        # 이전 Day 예측 완료 여부 검증
+                        if day > 1:
+                            missing_days = []
+                            for prev_day in range(1, day):
+                                prev_data = st.session_state.table_data.get(prev_day, {})
+                                if prev_data.get('당일 오후 FK용량') is None:
+                                    missing_days.append(prev_day)
+                            if missing_days:
+                                missing_str = ", ".join([f"Day {d}" for d in missing_days])
+                                st.error(f"Please complete prediction for {missing_str} first.")
+                                st.stop()
+
                         # 1. 현재 입력값 저장
                         st.session_state.table_data[day]['전날 오후 FK용량'] = prev_pm_value
                         st.session_state.table_data[day]['당일 오전 FK용량'] = am_value
                         st.session_state.table_data[day]['FK TDM'] = tdm_value
-                        
+
                         # 2. 예측 수행
                         with st.spinner("Running prediction..."):
                             pm_pred, am_pred, error = predict_dose(
